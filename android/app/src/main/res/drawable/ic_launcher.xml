@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher icon: dark tile with green (+VAT), red (−VAT) and blue (=) keys -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path android:fillColor="#0F172A"
+        android:pathData="M96,0h320a96,96 0,0 1,96 96v320a96,96 0,0 1,-96 96h-320a96,96 0,0 1,-96 -96v-320a96,96 0,0 1,96 -96z" />
+    <path android:fillColor="#1E293B"
+        android:pathData="M116,80h280a20,20 0,0 1,20 20v70a20,20 0,0 1,-20 20h-280a20,20 0,0 1,-20 -20v-70a20,20 0,0 1,20 -20z" />
+    <path android:fillColor="#16A34A"
+        android:pathData="M116,230h110a20,20 0,0 1,20 20v50a20,20 0,0 1,-20 20h-110a20,20 0,0 1,-20 -20v-50a20,20 0,0 1,20 -20z" />
+    <path android:fillColor="#DC2626"
+        android:pathData="M286,230h110a20,20 0,0 1,20 20v50a20,20 0,0 1,-20 20h-110a20,20 0,0 1,-20 -20v-50a20,20 0,0 1,20 -20z" />
+    <path android:fillColor="#2563EB"
+        android:pathData="M116,340h280a20,20 0,0 1,20 20v50a20,20 0,0 1,-20 20h-280a20,20 0,0 1,-20 -20v-50a20,20 0,0 1,20 -20z" />
+    <!-- plus -->
+    <path android:fillColor="#FFFFFF" android:pathData="M163,252h16v18h18v16h-18v18h-16v-18h-18v-16h18z" />
+    <!-- minus -->
+    <path android:fillColor="#FFFFFF" android:pathData="M315,270h52v16h-52z" />
+    <!-- equals -->
+    <path android:fillColor="#FFFFFF" android:pathData="M226,368h60v14h-60zM226,390h60v14h-60z" />
+</vector>
