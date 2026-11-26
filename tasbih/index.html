@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0d3b2e">
+<title>المسبحة</title>
+<style>
+  /* Layout: one-screen counter — dhikr text on top, large bead button centre, controls + stats below; settings as a full-screen sheet */
+  :root {
+    --bg: #f4f1e8; --surface: #fffdf7; --text: #1c2a24; --muted: #6b7a72; --line: #e4dfd0;
+    --green: #0d5c45; --green-deep: #0d3b2e; --gold: #b8862b; --gold-soft: #efe2c4;
+    --ring-track: #e6e0cf; --danger: #b42318; --on-green: #fdfaf2;
+    --font-dhikr: "Noto Naskh Arabic", "Amiri", "Traditional Arabic", serif;
+    --font-ui: system-ui, "Segoe UI", Tahoma, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c1714; --surface: #13221d; --text: #eef2ee; --muted: #94a59c; --line: #20332c;
+      --green: #2f8f6f; --green-deep: #0a2a21; --gold: #d9a94a; --gold-soft: #3a2f18;
+      --ring-track: #22362f; --danger: #f0786c; --on-green: #fdfaf2; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c1714; --surface: #13221d; --text: #eef2ee; --muted: #94a59c; --line: #20332c;
+    --green: #2f8f6f; --green-deep: #0a2a21; --gold: #d9a94a; --gold-soft: #3a2f18;
+    --ring-track: #22362f; --danger: #f0786c; --on-green: #fdfaf2; color-scheme: dark;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--text); font-family: var(--font-ui);
+    user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  }
+  .app {
+    min-height: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px;
+    padding-block: max(14px, env(safe-area-inset-top, 0px)) max(18px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  header { display: flex; align-items: center; justify-content: space-between; }
+  header h1 { margin: 0; font-size: 1.25rem; color: var(--green); font-family: var(--font-dhikr); }
+  .icon-btn {
+    width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
+    color: var(--text); display: grid; place-items: center; cursor: pointer; padding: 0;
+  }
+  .icon-btn svg { width: 22px; height: 22px; }
+
+  .dhikr-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+  }
+  .dhikr-text { font-family: var(--font-dhikr); font-size: 1.7rem; line-height: 1.8; min-height: 3.4em; display: grid; place-items: center; text-wrap: balance; }
+  .dhikr-meta { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .pill { font-size: .8rem; padding: 4px 10px; border-radius: 999px; background: var(--gold-soft); color: var(--gold); font-weight: 600; }
+  .pill.green { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+
+  .counter-wrap { display: grid; place-items: center; padding: 4px 0; }
+  .bead {
+    position: relative; width: min(72vw, 290px); aspect-ratio: 1; max-width: 100%; border-radius: 50%; border: 0;
+    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--green) 75%, white), var(--green) 55%, var(--green-deep));
+    color: var(--on-green); cursor: pointer; padding: 0; box-shadow: 0 14px 30px -12px color-mix(in srgb, var(--green-deep) 70%, transparent);
+    transition: transform .07s ease;
+  }
+  .bead:active, .bead.pulse { transform: scale(.965); }
+  .bead svg.ring { position: absolute; inset: -12px; width: calc(100% + 24px); height: calc(100% + 24px); transform: rotate(-90deg); pointer-events: none; }
+  .ring circle { fill: none; stroke-width: 7; }
+  .ring .track { stroke: var(--ring-track); }
+  .ring .prog { stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset .15s ease; }
+  .bead .num { font-size: 4.2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+  .bead .of { display: block; margin-top: 6px; font-size: 1rem; opacity: .85; font-variant-numeric: tabular-nums; }
+  .bead .hint { display: block; margin-top: 10px; font-size: .78rem; opacity: .7; }
+
+  .controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .ctl {
+    border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 14px;
+    padding: 12px 6px; font: inherit; font-size: .95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .ctl svg { width: 18px; height: 18px; }
+  .ctl:active { filter: brightness(.94); }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 6px; text-align: center; }
+  .stat b { display: block; font-size: 1.25rem; font-variant-numeric: tabular-nums; color: var(--green); }
+  .stat span { font-size: .78rem; color: var(--muted); }
+
+  .list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .list::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: 0 0 auto; max-width: 70vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 999px;
+    padding: 8px 14px; font-family: var(--font-dhikr); font-size: 1rem; cursor: pointer;
+  }
+  .chip.active { background: var(--green); color: var(--on-green); border-color: var(--green); }
+
+  /* Settings sheet */
+  .sheet {
+    position: fixed; inset: 0; background: var(--bg); z-index: 20; overflow-y: auto;
+    padding-block: max(14px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .sheet-inner { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  .section { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .section h2 { margin: 0; font-size: 1rem; color: var(--green); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .row label { font-size: .95rem; }
+  .switch { position: relative; width: 50px; height: 30px; flex: 0 0 auto; }
+  .switch input { opacity: 0; width: 100%; height: 100%; margin: 0; position: absolute; cursor: pointer; z-index: 1; }
+  .switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--ring-track); transition: background .15s; }
+  .switch span::after { content: ""; position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .switch input:checked + span { background: var(--green); }
+  .switch input:checked + span::after { transform: translateX(-20px); }
+  .switch input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: .85rem; color: var(--muted); }
+  textarea, input[type="number"] {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--text);
+    padding: 10px 12px; font-size: 1rem; user-select: text; -webkit-user-select: text;
+  }
+  textarea { font-family: var(--font-dhikr); font-size: 1.15rem; min-height: 80px; resize: vertical; line-height: 1.7; }
+  .btn {
+    border: 0; border-radius: 12px; padding: 12px 16px; font: inherit; font-weight: 600; cursor: pointer;
+    background: var(--green); color: var(--on-green);
+  }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .btn.danger { background: transparent; color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent); }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-row .btn { flex: 1 1 auto; }
+
+  .items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .items li { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .items li:last-child { border-bottom: 0; }
+  .items .t { flex: 1 1 auto; min-width: 0; font-family: var(--font-dhikr); font-size: 1.05rem; line-height: 1.6; }
+  .items .t small { display: block; font-family: var(--font-ui); font-size: .78rem; color: var(--muted); }
+  .mini { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); display: grid; place-items: center; cursor: pointer; padding: 0; flex: 0 0 auto; }
+  .mini svg { width: 16px; height: 16px; }
+  .mini.del { color: var(--danger); }
+  .mini:disabled { opacity: .35; cursor: default; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 16px)); transform: translateX(-50%);
+    background: var(--green-deep); color: var(--on-green); padding: 10px 18px; border-radius: 999px; font-size: .95rem; z-index: 40;
+    box-shadow: 0 8px 20px -8px rgba(0,0,0,.4);
+  }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 30; display: grid; place-items: center; padding: 16px; }
+  .modal { background: var(--surface); border-radius: 18px; padding: 18px; width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 14px; }
+  .modal p { margin: 0; line-height: 1.6; }
+  .err { color: var(--danger); font-size: .85rem; min-height: 1.2em; }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="app" id="main">
+  <header>
+    <h1>المسبحة</h1>
+    <button class="icon-btn" id="openSettings" aria-label="الإعدادات">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+
+  <section class="dhikr-card">
+    <div class="dhikr-text" id="dhikrText"></div>
+    <div class="dhikr-meta">
+      <span class="pill" id="targetPill"></span>
+      <span class="pill green" id="roundsPill"></span>
+    </div>
+  </section>
+
+  <div class="counter-wrap">
+    <button class="bead" id="bead" aria-label="سبّح">
+      <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="track" cx="50" cy="50" r="46"/>
+        <circle class="prog" id="prog" cx="50" cy="50" r="46" stroke-dasharray="289.03" stroke-dashoffset="289.03"/>
+      </svg>
+      <span class="num" id="count">0</span>
+      <span class="of" id="of"></span>
+      <span class="hint">اضغط للتسبيح</span>
+    </button>
+  </div>
+
+  <div class="controls">
+    <button class="ctl" id="prevBtn" aria-label="الذكر السابق">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>السابق
+    </button>
+    <button class="ctl" id="resetBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>تصفير
+    </button>
+    <button class="ctl" id="nextBtn" aria-label="الذكر التالي">التالي
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+  </div>
+
+  <nav class="list" id="chips" aria-label="قائمة الأذكار"></nav>
+
+  <section class="stats">
+    <div class="stat"><b id="statToday">0</b><span>تسبيحات اليوم</span></div>
+    <div class="stat"><b id="statRounds">0</b><span>أذكار مكتملة اليوم</span></div>
+    <div class="stat"><b id="statTotal">0</b><span>الإجمالي</span></div>
+  </section>
+</main>
+
+<section class="sheet" id="settings" hidden>
+  <div class="sheet-inner">
+    <header>
+      <h1>الإعدادات</h1>
+      <button class="icon-btn" id="closeSettings" aria-label="إغلاق">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+
+    <div class="section">
+      <h2 id="formTitle">إضافة ذكر جديد</h2>
+      <div class="field">
+        <label for="newText">نص الذكر</label>
+        <textarea id="newText" placeholder="اكتب الذكر هنا"></textarea>
+      </div>
+      <div class="field">
+        <label for="newTarget">عدد المرات (اتركه 0 للعدّ المفتوح بلا هدف)</label>
+        <input id="newTarget" type="number" inputmode="numeric" min="0" max="100000" value="33">
+      </div>
+      <div class="err" id="formErr"></div>
+      <div class="btn-row">
+        <button class="btn" id="saveDhikr">إضافة</button>
+        <button class="btn ghost" id="cancelEdit" hidden>إلغاء التعديل</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>أذكاري</h2>
+      <ul class="items" id="items"></ul>
+    </div>
+
+    <div class="section">
+      <h2>خيارات</h2>
+      <div class="row"><label for="optVibrate">اهتزاز مع كل تسبيحة</label><span class="switch"><input type="checkbox" id="optVibrate"><span></span></span></div>
+      <div class="row"><label for="optAutoNext">الانتقال للذكر التالي عند اكتمال العدد</label><span class="switch"><input type="checkbox" id="optAutoNext"><span></span></span></div>
+      <div class="row"><label for="optVolume">التسبيح بأزرار الصوت</label><span class="switch"><input type="checkbox" id="optVolume"><span></span></span></div>
+      <div class="row"><label for="optAwake">إبقاء الشاشة مضاءة</label><span class="switch"><input type="checkbox" id="optAwake"><span></span></span></div>
+    </div>
+
+    <div class="section">
+      <h2>إعادة الضبط</h2>
+      <div class="btn-row">
+        <button class="btn ghost" id="resetStats">تصفير الإحصائيات</button>
+        <button class="btn danger" id="resetDefaults">استعادة الأذكار الافتراضية</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="modal-bg" id="confirmBox" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <p id="confirmMsg"></p>
+    <div class="btn-row">
+      <button class="btn danger" id="confirmYes">تأكيد</button>
+      <button class="btn ghost" id="confirmNo">إلغاء</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const RING = 2 * Math.PI * 46;
+
+  // Default adhkar: well-known wording only; users add their own from settings.
+  const DEFAULTS = [
+    { text: 'سبحان الله', target: 33 },
+    { text: 'الحمد لله', target: 33 },
+    { text: 'الله أكبر', target: 33 },
+    { text: 'لا إله إلا الله وحده لا شريك له، له الملك وله الحمد، وهو على كل شيء قدير', target: 1 },
+    { text: 'أستغفر الله', target: 100 },
+    { text: 'سبحان الله وبحمده', target: 100 },
+    { text: 'سبحان الله وبحمده، سبحان الله العظيم', target: 100 },
+    { text: 'لا حول ولا قوة إلا بالله', target: 100 },
+    { text: 'لا إله إلا الله', target: 100 },
+    { text: 'اللهم صل وسلم على نبينا محمد', target: 10 },
+  ];
+
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+  const fmt = n => n.toLocaleString('ar-EG');
+
+  let adhkar = store.get('tasbih.adhkar', null);
+  if (!Array.isArray(adhkar) || !adhkar.length) adhkar = DEFAULTS.map(d => ({ id: uid(), ...d }));
+  let st = Object.assign({ current: 0, count: 0, rounds: 0 }, store.get('tasbih.state', {}));
+  let opts = Object.assign({ vibrate: true, autoNext: true, volume: false, awake: false }, store.get('tasbih.opts', {}));
+  let stats = Object.assign({ day: today(), today: 0, roundsToday: 0, total: 0 }, store.get('tasbih.stats', {}));
+  let editingId = null;
+
+  const save = () => { store.set('tasbih.adhkar', adhkar); store.set('tasbih.state', st); store.set('tasbih.opts', opts); store.set('tasbih.stats', stats); };
+  const native = window.Android;
+
+  function haptic(ms) {
+    if (!opts.vibrate) return;
+    try { if (native && native.vibrate) native.vibrate(ms); else if (navigator.vibrate) navigator.vibrate(ms); } catch {}
+  }
+  function applyNative() {
+    try { if (native && native.setVolumeKeys) native.setVolumeKeys(!!opts.volume); } catch {}
+    try { if (native && native.setKeepScreenOn) native.setKeepScreenOn(!!opts.awake); } catch {}
+  }
+  function rollDay() {
+    if (stats.day !== today()) { stats.day = today(); stats.today = 0; stats.roundsToday = 0; }
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 1600);
+  }
+  function confirmBox(msg) {
+    return new Promise(res => {
+      $('confirmMsg').textContent = msg; $('confirmBox').hidden = false;
+      const done = v => { $('confirmBox').hidden = true; $('confirmYes').onclick = $('confirmNo').onclick = null; res(v); };
+      $('confirmYes').onclick = () => done(true); $('confirmNo').onclick = () => done(false);
+    });
+  }
+
+  const cur = () => adhkar[Math.min(st.current, adhkar.length - 1)];
+
+  function render() {
+    rollDay();
+    if (st.current >= adhkar.length) st.current = 0;
+    const d = cur();
+    $('dhikrText').textContent = d.text;
+    $('count').textContent = fmt(st.count);
+    $('of').textContent = d.target ? `من ${fmt(d.target)}` : 'عدّ مفتوح';
+    $('targetPill').textContent = d.target ? `الهدف ${fmt(d.target)}` : 'بدون هدف';
+    $('roundsPill').textContent = `الدورات ${fmt(st.rounds)}`;
+    const p = d.target ? Math.min(st.count / d.target, 1) : (st.count % 100) / 100;
+    $('prog').style.strokeDashoffset = String(RING * (1 - p));
+    $('prog').style.opacity = p > 0 ? '1' : '0';
+    $('statToday').textContent = fmt(stats.today);
+    $('statRounds').textContent = fmt(stats.roundsToday);
+    $('statTotal').textContent = fmt(stats.total);
+    renderChips();
+  }
+
+  function renderChips() {
+    const box = $('chips'); box.innerHTML = '';
+    adhkar.forEach((d, i) => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (i === st.current ? ' active' : '');
+      b.textContent = d.text;
+      b.onclick = () => select(i);
+      box.appendChild(b);
+    });
+    const a = box.querySelector('.active');
+    if (a) a.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
+  function select(i) {
+    st.current = (i + adhkar.length) % adhkar.length;
+    st.count = 0; st.rounds = 0;
+    save(); render();
+  }
+
+  function count() {
+    if (!$('settings').hidden || !$('confirmBox').hidden) return;
+    rollDay();
+    const d = cur();
+    st.count++; stats.today++; stats.total++;
+    const b = $('bead'); b.classList.add('pulse'); setTimeout(() => b.classList.remove('pulse'), 70);
+    if (d.target && st.count >= d.target) {
+      st.rounds++; stats.roundsToday++;
+      haptic(400);
+      if (opts.autoNext && adhkar.length > 1) {
+        toast('اكتمل ✓ — الذكر التالي');
+        st.current = (st.current + 1) % adhkar.length; st.count = 0; st.rounds = 0;
+      } else {
+        toast('اكتمل ✓');
+        st.count = 0;
+      }
+    } else {
+      haptic(25);
+    }
+    save(); render();
+  }
+  window.tasbihCount = count; // called by Android volume keys
+
+  $('bead').addEventListener('pointerdown', e => { e.preventDefault(); count(); });
+  $('bead').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); count(); } });
+  $('prevBtn').onclick = () => select(st.current - 1);
+  $('nextBtn').onclick = () => select(st.current + 1);
+  $('resetBtn').onclick = () => { st.count = 0; st.rounds = 0; save(); render(); };
+
+  // ---------- settings ----------
+  const ICON_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>';
+  const ICON_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+  const ICON_DEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>';
+
+  function renderItems() {
+    const ul = $('items'); ul.innerHTML = '';
+    adhkar.forEach((d, i) => {
+      const li = document.createElement('li');
+      const t = document.createElement('div'); t.className = 't';
+      t.textContent = d.text;
+      const sm = document.createElement('small'); sm.textContent = d.target ? `${fmt(d.target)} مرة` : 'عدّ مفتوح';
+      t.appendChild(sm);
+      const mk = (html, label, fn, cls = '', disabled = false) => {
+        const b = document.createElement('button'); b.className = 'mini ' + cls; b.innerHTML = html;
+        b.setAttribute('aria-label', label); b.disabled = disabled; b.onclick = fn; return b;
+      };
+      li.append(t,
+        mk(ICON_UP, 'تحريك لأعلى', () => move(i, -1), '', i === 0),
+        mk(ICON_DOWN, 'تحريك لأسفل', () => move(i, 1), '', i === adhkar.length - 1),
+        mk(ICON_EDIT, 'تعديل', () => startEdit(d.id)),
+        mk(ICON_DEL, 'حذف', () => remove(d.id), 'del', adhkar.length === 1));
+      ul.appendChild(li);
+    });
+  }
+
+  function move(i, dir) {
+    const j = i + dir; if (j < 0 || j >= adhkar.length) return;
+    const curId = cur().id;
+    [adhkar[i], adhkar[j]] = [adhkar[j], adhkar[i]];
+    st.current = adhkar.findIndex(d => d.id === curId);
+    save(); renderItems();
+  }
+
+  async function remove(id) {
+    if (adhkar.length === 1) return;
+    const d = adhkar.find(x => x.id === id);
+    if (!(await confirmBox(`حذف الذكر: «${d.text}»؟`))) return;
+    const curId = cur().id;
+    adhkar = adhkar.filter(x => x.id !== id);
+    const idx = adhkar.findIndex(x => x.id === curId);
+    if (idx === -1) { st.current = 0; st.count = 0; st.rounds = 0; } else st.current = idx;
+    if (editingId === id) stopEdit();
+    save(); renderItems(); toast('تم الحذف');
+  }
+
+  function startEdit(id) {
+    const d = adhkar.find(x => x.id === id); editingId = id;
+    $('newText').value = d.text; $('newTarget').value = d.target;
+    $('formTitle').textContent = 'تعديل الذكر'; $('saveDhikr').textContent = 'حفظ التعديل';
+    $('cancelEdit').hidden = false; $('formErr').textContent = '';
+    $('settings').scrollTo({ top: 0, behavior: 'smooth' }); $('newText').focus();
+  }
+  function stopEdit() {
+    editingId = null; $('newText').value = ''; $('newTarget').value = 33;
+    $('formTitle').textContent = 'إضافة ذكر جديد'; $('saveDhikr').textContent = 'إضافة';
+    $('cancelEdit').hidden = true; $('formErr').textContent = '';
+  }
+
+  $('saveDhikr').onclick = () => {
+    const text = $('newText').value.replace(/\s+/g, ' ').trim();
+    const target = Math.floor(Number($('newTarget').value));
+    if (!text) { $('formErr').textContent = 'اكتب نص الذكر أولاً.'; return; }
+    if (!Number.isFinite(target) || target < 0 || target > 100000) { $('formErr').textContent = 'العدد يجب أن يكون بين 0 و 100000.'; return; }
+    if (editingId) {
+      const d = adhkar.find(x => x.id === editingId); d.text = text; d.target = target;
+      toast('تم حفظ التعديل');
+    } else {
+      adhkar.push({ id: uid(), text, target });
+      toast('تمت إضافة الذكر');
+    }
+    stopEdit(); save(); renderItems();
+  };
+  $('cancelEdit').onclick = stopEdit;
+
+  const bindOpt = (id, key, after) => {
+    const el = $(id); el.checked = !!opts[key];
+    el.onchange = () => { opts[key] = el.checked; save(); if (after) after(); };
+  };
+  bindOpt('optVibrate', 'vibrate', () => opts.vibrate && haptic(40));
+  bindOpt('optAutoNext', 'autoNext');
+  bindOpt('optVolume', 'volume', applyNative);
+  bindOpt('optAwake', 'awake', applyNative);
+
+  $('resetStats').onclick = async () => {
+    if (!(await confirmBox('تصفير كل الإحصائيات (اليوم والإجمالي)؟'))) return;
+    stats = { day: today(), today: 0, roundsToday: 0, total: 0 }; save(); toast('تم تصفير الإحصائيات');
+  };
+  $('resetDefaults').onclick = async () => {
+    if (!(await confirmBox('سيتم حذف الأذكار التي أضفتها واستعادة القائمة الافتراضية. متابعة؟'))) return;
+    adhkar = DEFAULTS.map(d => ({ id: uid(), ...d })); st = { current: 0, count: 0, rounds: 0 };
+    stopEdit(); save(); renderItems(); toast('تمت الاستعادة');
+  };
+
+  function openSettings() { renderItems(); $('settings').hidden = false; $('main').setAttribute('aria-hidden', 'true'); }
+  function closeSettings() { stopEdit(); $('settings').hidden = true; $('main').removeAttribute('aria-hidden'); render(); }
+  $('openSettings').onclick = openSettings;
+  $('closeSettings').onclick = closeSettings;
+
+  // Android back button → close overlays first (returns true if handled)
+  window.tasbihBack = () => {
+    if (!$('confirmBox').hidden) { $('confirmNo').click(); return true; }
+    if (!$('settings').hidden) { closeSettings(); return true; }
+    return false;
+  };
+
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+  applyNative();
+  save();
+  render();
+})();
+</script>
+</body>
+</html>

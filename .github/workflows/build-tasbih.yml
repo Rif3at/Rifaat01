@@ -1,0 +1,57 @@
+name: Build Tasbih APK
+
+on:
+  push:
+    paths:
+      - 'tasbih/**'
+      - 'android-tasbih/**'
+      - '.github/workflows/build-tasbih.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to create/update the GitHub Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Sync web app into Android assets
+        run: cp tasbih/index.html android-tasbih/app/src/main/assets/
+
+      - name: Build debug APK
+        run: gradle -p android-tasbih assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: cp android-tasbih/app/build/outputs/apk/debug/app-debug.apk Tasbih.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tasbih-apk
+          path: Tasbih.apk
+
+      # Permanent direct link: https://github.com/<owner>/<repo>/releases/download/tasbih-v1.0/Tasbih.apk
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=tasbih-v1.0
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" Tasbih.apk --clobber
+          else
+            gh release create "$TAG" Tasbih.apk \
+              --target "$GITHUB_SHA" \
+              --title "المسبحة v1.0" \
+              --notes "مسبحة إلكترونية بأذكار جاهزة، مع إمكانية إضافة وتعديل وترتيب الأذكار من الإعدادات، واهتزاز، والتسبيح بأزرار الصوت. يتطلب Android 7 أو أحدث." \
+              --latest=false
+          fi

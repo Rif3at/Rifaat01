@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher icon: deep-green tile with a ring of gold beads and a tassel bead -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path android:fillColor="#0D3B2E"
+        android:pathData="M96,0h320a96,96 0,0 1,96 96v320a96,96 0,0 1,-96 96h-320a96,96 0,0 1,-96 -96v-320a96,96 0,0 1,96 -96z" />
+    <!-- ring of beads (radius 130 around 256,236) -->
+    <path android:fillColor="#D9A94A" android:pathData="M256,106m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M321,123m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M369,171m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M386,236m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M369,301m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M321,349m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M191,349m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M143,301m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M126,236m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M143,171m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M191,123m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <!-- imam bead + tassel -->
+    <path android:fillColor="#F3E3BC" android:pathData="M256,366m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0" />
+    <path android:fillColor="#D9A94A" android:pathData="M244,396h24l14,70h-52z" />
+</vector>
