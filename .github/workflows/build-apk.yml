@@ -8,6 +8,9 @@ on:
       - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write   # needed to create/update the GitHub Release
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,3 +39,20 @@ jobs:
         with:
           name: VAT-Calculator-apk
           path: VAT-Calculator.apk
+
+      # Publish the APK as a Release so it has a permanent direct download link:
+      # https://github.com/<owner>/<repo>/releases/latest/download/VAT-Calculator.apk
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=v1.0
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" VAT-Calculator.apk --clobber
+          else
+            gh release create "$TAG" VAT-Calculator.apk \
+              --target "$GITHUB_SHA" \
+              --title "حاسبة الضريبة v1.0" \
+              --notes "حاسبة ضريبة القيمة المضافة 15% مع زر إضافة الضريبة (+) وزر استخراجها (−). للتثبيت: حمّل VAT-Calculator.apk واسمح بالتثبيت من مصادر غير معروفة. يتطلب Android 7 أو أحدث." \
+              --latest
+          fi
