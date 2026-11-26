@@ -10,13 +10,28 @@ android {
         applicationId 'com.orbitatech.vatcalc'
         minSdk 24
         targetSdk 34
-        versionCode 1
+        // GitHub Actions run number → every build has a higher versionCode, so updates install over the old app
+        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger())
         versionName '1.0'
+    }
+
+    // Fixed release key, supplied by CI from GitHub Secrets (never committed to the repo)
+    signingConfigs {
+        release {
+            def ks = System.getenv('ANDROID_KEYSTORE_FILE')
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias 'orbita'
+                keyPassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+            }
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release
         }
     }
 

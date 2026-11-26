@@ -29,11 +29,24 @@ jobs:
       - name: Sync web app into Android assets
         run: cp calculator/index.html calculator/icon.svg android/app/src/main/assets/
 
-      - name: Build debug APK
-        run: gradle -p android assembleDebug --no-daemon
+      - name: Restore signing key from secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PW" ]; then
+            echo "::error::Missing secrets ANDROID_KEYSTORE_BASE64 / ANDROID_KEYSTORE_PASSWORD — refusing to publish an APK with a temporary key."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          echo "ANDROID_KEYSTORE_PASSWORD=$KEYSTORE_PW" >> "$GITHUB_ENV"
+
+      - name: Build signed release APK
+        run: gradle -p android assembleRelease --no-daemon
 
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk VAT-Calculator.apk
+        run: cp android/app/build/outputs/apk/release/app-release.apk VAT-Calculator.apk
 
       - uses: actions/upload-artifact@v4
         with:
